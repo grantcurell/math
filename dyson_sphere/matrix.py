@@ -4,7 +4,7 @@ from scipy.optimize import linprog
 # Order = copper, copper factories, magnets, magnet factories, iron, iron factories, circuits, circuit factories
 #         circular magnet, circular magnet factory, matrix, matrix factories
 
-c = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+c = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0]
 A_ub = [[0, 0, 0, 0, 1, -60, 0, 0, 0, 0, 0, 0],
         [1, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
