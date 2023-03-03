@@ -1,62 +1,37 @@
-import numpy as np
-from scipy.optimize import linprog
-
-# Order = copper, copper factories, magnets, magnet factories, iron, iron factories, circuits, circuit factories
-#         circular magnet, circular magnet factory, matrix, matrix factories
-
-c = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0]
-A_ub = [[1, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]]
-b_ub = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -20, 180, 150]
-A_eq = [[-1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]]
-b_eq = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-# Create a new LP problem
-problem = plp.LpProblem('Matrix Factory Problem', plp.LpMinimize)
+import pulp
 
 # Define decision variables
-x = [plp.LpVariable('x{}'.format(i + 1), lowBound=0, cat='Integer') for i in range(len(c))]
+copper_ingots_per_second = pulp.LpVariable('Copper Ingots Per Second', lowBound=0)
+iron_ingots_per_second = pulp.LpVariable('Iron Ingots Per Second', lowBound=0)
+iron_ore_per_second = pulp.LpVariable('Iron Ore Per Second', lowBound=0)
+copper_ore_per_second = pulp.LpVariable('Copper Ore Per Second', lowBound=0)
+y = pulp.LpVariable('y', lowBound=0)
 
-# Set objective function
-problem += plp.lpDot(c, x)
+# Define the optimization problem as a maximization problem
+problem = pulp.LpProblem('Green Circuit Production', pulp.LpMaximize)
 
-# Add constraints
-for i in range(len(A_ub)):
-    problem += plp.lpDot(A_ub[i], x) <= b_ub[i]
+# Define objective function
+problem += y
 
-for i in range(len(A_eq)):
-    problem += plp.lpDot(A_eq[i], x) == b_eq[i]
+# Define constraints
+problem += copper_ingots_per_second >= .75 * y
+problem += iron_ingots_per_second >= 1.5 * y
+problem += copper_ore_per_second >= copper_ingots_per_second
+problem += iron_ore_per_second >= iron_ingots_per_second
+problem += iron_ore_per_second <= 3.5
+problem += copper_ore_per_second <= 3.5
+problem += y <= .75
 
 # Solve the problem
 status = problem.solve()
 
-# Print the solution status
-print(plp.LpStatus[status])
-
-# Print the optimal objective value
-print('Optimal objective value:', problem.objective.value())
-
-# Print the optimal decision variables
-for i in range(len(x)):
-    print('x{} = {}'.format(i + 1, x[i].value()))
+# Check if a solution was found
+if status == pulp.LpStatusOptimal:
+    # Print the values of copper_ingots_per_second, iron_ingots_per_second, iron_ore_per_second, copper_ore_per_second, and y
+    print("Copper Ingots Per Second = ", copper_ingots_per_second.value())
+    print("Iron Ingots Per Second = ", iron_ingots_per_second.value())
+    print("Iron Ore Per Second = ", iron_ore_per_second.value())
+    print("Copper Ore Per Second = ", copper_ore_per_second.value())
+    print("y = ", y.value())
+else:
+    print("No solution found.")
