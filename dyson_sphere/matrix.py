@@ -32,8 +32,31 @@ A_eq = [[-1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]]
 b_eq = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
-res = linprog(c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq, method='highs')
+# Create a new LP problem
+problem = plp.LpProblem('Matrix Factory Problem', plp.LpMinimize)
 
-np.set_printoptions(suppress=True)
+# Define decision variables
+x = [plp.LpVariable('x{}'.format(i + 1), lowBound=0, cat='Integer') for i in range(len(c))]
 
-print(res)
+# Set objective function
+problem += plp.lpDot(c, x)
+
+# Add constraints
+for i in range(len(A_ub)):
+    problem += plp.lpDot(A_ub[i], x) <= b_ub[i]
+
+for i in range(len(A_eq)):
+    problem += plp.lpDot(A_eq[i], x) == b_eq[i]
+
+# Solve the problem
+status = problem.solve()
+
+# Print the solution status
+print(plp.LpStatus[status])
+
+# Print the optimal objective value
+print('Optimal objective value:', problem.objective.value())
+
+# Print the optimal decision variables
+for i in range(len(x)):
+    print('x{} = {}'.format(i + 1, x[i].value()))
